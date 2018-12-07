@@ -55,6 +55,7 @@ module.exports = class SparseMerkleTree {
                 } else {
                     let coIndex = index.sub(this.big1).toString();
                     if (treeLevel[coIndex] === undefined) {
+                        console.log(level, index.toString(10), value, defaultNodes[level])
                         nextLevel[halfIndex] = this.sha3(defaultNodes[level], value);
                     }
                 }
@@ -67,8 +68,7 @@ module.exports = class SparseMerkleTree {
 
     createMerkleProof(uid) {
         let index = new BN(uid);
-        let proof = '';
-        let proofbits = new BN(0);
+        let proof = [];
         let siblingIndex;
         let siblingHash;
         for (let level=0; level < this.depth; level++) {
@@ -77,20 +77,31 @@ module.exports = class SparseMerkleTree {
 
             siblingHash = this.tree[level][siblingIndex.toString()];
             if (siblingHash) {
-                proof += siblingHash.toString().replace('0x', '');
-                proofbits = proofbits.bincn(level);
+                proof.push(siblingHash.toString().replace('0x', ''));
             }
         }
+        return proof;
+    }
 
-        let buf = proofbits.toBuffer('be', 8);
-        let total = Buffer.concat([buf, Buffer.from(proof, 'hex')]);
-        return '0x' + total.toString('hex');
+    proof (leaf, proof) {
+        if (typeof leaf !== 'string' || leaf.length !== 64) {
+            throw new Error('Please pass correct leaf');
+        }
+        if (proof.length <= 0) {
+            throw new Error('Please pass correct proof');
+        }
+        let root = this.root;
+        let merkleProof = this.sha3(leaf, proof[0]);
+        for (let i=1; i<proof.length; i++) {
+            merkleProof = this.sha3(merkleProof, proof[i]);
+        }
+        return true;
     }
 
     sha3 () {
         let args = Array.prototype.slice.call(arguments);
         let hash = '';
-        if (args.length > 1) {
+        if (args.length == 2) {
             for (let i=0; i<args.length; i+=2) {
                 hash = utils.keccak256(utils.keccak256(args[i]).toString('hex') + utils.keccak256(args[i + 1]).toString('hex')).toString('hex');
             }
