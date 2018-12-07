@@ -18,6 +18,11 @@ for (let i=0; i<=total; i++) {
     if (merkleProof.length === 0) {
         console.warn('The UID was not including in sparse merkle tree');
     } else {
-        console.log(`Proof of ${i}: ${merkleProof.join(' ')} ${merkleProof.length} ${tree.proof(elems[i], merkleProof)}`);
+        if (elems[i] === undefined) {
+            // pass default node
+            console.log(`Proof of ${i}: ${merkleProof.join(' ')} ${merkleProof.length} ${tree.proof(tree.defaultNodes[0], merkleProof)}`);
+        } else {
+            console.log(`Proof of ${i}: ${merkleProof.join(' ')} ${merkleProof.length} ${tree.proof(elems[i], merkleProof)}`);
+        }
     }
 }
